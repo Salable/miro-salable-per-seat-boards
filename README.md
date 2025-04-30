@@ -16,26 +16,26 @@ This Miro app demonstrates using [usage-based](https://www.salable.app/features/
 #### Create Plan
 
 1. Go to the `Plans` tab on the sidebar and select `Create Plan`
-2. Set the plan name as `Shapes User` and optionally provide a description. This plan will be a 'user' plan giving access to the product for a user on all boards but no other users on the team will be able to use it.
+2. Set the plan name as `Basic` and optionally provide a description.
 3. Press `Continue` to configure `License Type` information.
 4. For the type of plan select `Standard`.
 5. Select `Month` for subscription cycle.
-6. Select `Usage` license type.
+6. Select `Per seat` license type.
 7. Select `Paid` to make it a paid plan.
-8. Currencies will then appear, input the cost as `0.50` which will bill a customer £0.50 for every credit they consume every month.
+8. Currencies will then appear, input `1` as the per-seat cost of the plan’s subscription, this will be billed to a customer every month based on how many seats they have.
 9. Continue to `Assign values`.
-10. This is section is for assigning feature values that can be used on pricing tables. This is not required to get set up.
+10. This section is for assigning feature values that can be used on pricing tables. This is not required to get set up.
 11. Click `Continue` to `Capabilities`.
-12. Create a capabilities called `circle`, `rectangle` and `triangle`. These will be used to lock features behind the license check in the demo app.
+12. Create the capabilities called `rectangle` and `triangle`. These will be used to lock features behind the license check in the demo app.
 13. Create Plan.
-14. Repeat the above steps for a `Shapes Board` plan but with the changes in the next steps. This plan will be a 'board' plan allowing all users on a single board access to the product. All users on the board will contribute to the board's subscription consumption. If a user has their own subscription but is using the app on a board that is also subscribed the board usage will take priority.
-15. Set the monthly cost as `0.50` plan which will bill the customer £0.50 per credit consumed per month.
-16. Select the existing capabilities `circle`, `triangle` and `rectangle`.
+14. Repeat the above steps for a `Pro` plan but with the changes in the next steps.
+15. Set the per-seat cost as `2` plan which will bill the customer £2 per board they have access to.
+16. Select the existing capabilities `triangle` and `rectangle`, create a new capability called `circle`.
 
 ### Update Environment Variables
 
 1. Copy the Product ID from the `General Settings` tab and assign to `NEXT_PUBLIC_PRODUCT_UUID` in the `.env` file.
-2. Go to `Plans`. Assign the `Shapes User` ID to `NEXT_PUBLIC_SALABLE_USER_UUID` and `Shapes Board` ID to `NEXT_PUBLIC_SALABLE_BOARD_PLAN_UUID`.
+2. Go to `Plans`. Assign the `Basic` ID to `NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID` and `Pro` ID to `NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID`.
 3. Go to `API Keys`.
 4. Copy the API Key that was generated on sign up and assign to `SALABLE_API_KEY`.
 5. Run `npm run dev`

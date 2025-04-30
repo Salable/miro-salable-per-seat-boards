@@ -24,7 +24,6 @@ export const PricingTable = ({userId}: {userId: string}) => {
         if (isBoardOwnerData.error) setError(isBoardOwnerData.error)
         if (isBoardOwnerData.data !== null) setIsOwner(isBoardOwnerData.data)
         const data = await licenseCheck([userId, boardInfo.id])
-        console.log(data)
         if (data.data) setCheck(data.data)
         setLoading(false)
       } catch (e) {
