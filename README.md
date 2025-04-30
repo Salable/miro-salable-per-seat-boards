@@ -1,4 +1,4 @@
-This Miro app demonstrates using [usage-based](https://www.salable.app/features/usage-based-pricing) billing with Salable.
+This Miro app demonstrates using [per-seat](https://www.salable.app/features/per-seat-pricing) billing with Salable.
 
 ## Configure Salable
 
