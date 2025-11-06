@@ -63,10 +63,6 @@ This Miro app demonstrates using [per-seat](https://www.salable.app/features/per
   **Client ID** and **Client secret** values: you'll need to enter these values
   in step 4 below.
 - Go to **App URL** and enter the following URL: `http://localhost:3000`
-- Go to **Redirect URI for OAuth2.0**, and enter the following redirect URL:
-  `http://localhost:3000/api/redirect`
-- Click **Options**. \
-  From the drop-down menu select **Use this URI for SDK authorization**.
 - Lastly, go to **Permissions**, and select the following permissions:
   - `board:read`
   - `board:write`

@@ -2,43 +2,33 @@
 import {CancelPlanButton} from "./cancel-plan-button";
 import {FetchError} from "./fetch-error";
 import React, {useEffect, useState} from "react";
-import {getOneSubscription, SubscriptionExpandedPlanCurrency} from "../actions/subscriptions";
+import {SubscriptionExpandedPlanCurrency} from "../app/api/subscriptions/types";
 import {notFound} from "next/navigation";
 import Link from "next/link";
-import {getAllLicenses} from "../actions/licenses/get-all";
-import {BoardData, getAllBoards} from "../actions/board";
-import {PaginatedLicenses} from "@salable/node-sdk/dist/src/types";
+import {BoardData} from "../app/api/board/all/route";
+import {Seat, PaginatedSeats} from "@salable/node-sdk/dist/src/types";
+import axios from "axios";
 import {AssignBoard} from "./assign-board";
 import {UpdateSubscription} from "./update-subscription";
 import {ChangePlanButton} from "./change-plan-button";
 import {salableBasicPlanUuid, salableProPlanUuid} from "../app/constants";
+import useSWR from "swr";
 
 export const SubscriptionView = ({uuid}: {uuid: string}) => {
-  const [loading, setLoading] = useState(true)
-  const [subscription, setSubscription] = useState<SubscriptionExpandedPlanCurrency | null>(null)
-  const [subscriptionError, setSubscriptionError] = useState<string | null>(null)
-  const [fetchSubscription, setFetchSubscription] = useState(true)
-  const [fetchSeats, setFetchSeats] = useState<boolean>(true)
+  const [boardId, setBoardId] = useState<string | null>(null);
+  
   useEffect(() => {
-    async function fetchData() {
-      if (!fetchSubscription) return
-      try {
-        const board = await miro.board.getInfo()
-        const data = await getOneSubscription(uuid, board.id)
-        if (data.data) setSubscription(data.data)
-        if (data.error) setSubscriptionError(data.error)
-        setLoading(false)
-        setFetchSubscription(false)
-      } catch (e) {
-        setLoading(false)
-        setFetchSubscription(false)
-        console.log(e)
-      }
-    }
-    fetchData()
-  }, [fetchSubscription]);
-  if (loading) return <Loading />
-  if (subscriptionError) return <FetchError error={subscriptionError}/>
+    miro.board.getInfo().then(board => setBoardId(board.id));
+  }, []);
+
+  const { data: subscription, isLoading, error, mutate } = useSWR<SubscriptionExpandedPlanCurrency>(
+    boardId ? `/api/subscriptions/${uuid}?boardId=${boardId}` : null
+  );
+
+  const [fetchSeats, setFetchSeats] = useState<boolean>(true)
+  
+  if (isLoading || !subscription) return <Loading />
+  if (error) return <FetchError error="Failed to load subscription"/>
   if (!subscription) return notFound()
   return (
     <>
@@ -59,11 +49,12 @@ export const SubscriptionView = ({uuid}: {uuid: string}) => {
       </div>
       {subscription.status !== 'CANCELED' ? (
         <div className='flex space-x-2'>
-          <CancelPlanButton subscriptionUuid={uuid}/>
+          <CancelPlanButton subscriptionUuid={uuid} mutate={mutate}/>
           <ChangePlanButton
             subscriptionUuid={uuid}
             planUuid={subscription.planUuid === salableBasicPlanUuid ? salableProPlanUuid : salableBasicPlanUuid}
             planName={subscription.planUuid === salableBasicPlanUuid ? 'Pro' : 'Basic'}
+            mutate={mutate}
           />
         </div>
       ) : null}
@@ -101,23 +92,36 @@ const Seats = ({
   const [boards, setBoards] = useState<BoardData[] | null>(null)
   const [nonLicensedBoards, setNonLicensedBoards] = useState<BoardData[] | null>(null)
   const [boardsError, setBoardsError] = useState<string | null>(null)
-  const [subscriptionSeats, setSubscriptionSeats] = useState<PaginatedLicenses | null>(null)
+  const [subscriptionSeats, setSubscriptionSeats] = useState<PaginatedSeats | null>(null)
   const [seatsError, setSeatsError] = useState<string | null>(null)
   useEffect(() => {
     async function fetchData() {
       if (!fetchSeats) return
       try {
-        const seats = await getAllLicenses({
-          subscriptionUuid: uuid,
-          status: subscription.status === 'CANCELED' ? 'CANCELED' : 'ACTIVE',
-        })
-        const boards = await getAllBoards()
-        if (boards.data) setBoards(boards.data)
-        if (boards.error) setBoardsError(boards.error)
+        const token = await miro.board.getIdToken();
+        
+        const seatsResponse = await axios.get(
+          `/api/subscriptions/${uuid}/seats`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const seats = seatsResponse.data ? { data: seatsResponse.data, error: null } : { data: null, error: null };
+        
+        const boardsResponse = await axios.get(
+          '/api/board/all',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (boardsResponse.data.boards) {
+          setBoards(boardsResponse.data.boards);
+        }
+        if (boardsResponse.data.error) {
+          setBoardsError(boardsResponse.data.error);
+        }
+        
         if (seats.data) setSubscriptionSeats(seats.data)
         if (seats.error) setSeatsError(seats.error)
-        const nonLicensedBoards = boards.data?.reduce((arr: BoardData[], b) => {
-          if (!seats.data?.data.find((s) => s.granteeId === b.id)) arr.push(b)
+        
+        const nonLicensedBoards = boardsResponse.data.boards?.reduce((arr: BoardData[], b: BoardData) => {
+          if (!seats.data?.data.find((s: Seat) => s.granteeId === b.id)) arr.push(b)
           return arr
         }, [])
         if (nonLicensedBoards) setNonLicensedBoards(nonLicensedBoards)
@@ -126,7 +130,6 @@ const Seats = ({
       } catch (e) {
         setLoading(false)
         setFetchSeats(false)
-        console.log(e)
       }
     }
     fetchData()
@@ -149,12 +152,13 @@ const Seats = ({
                 if (l.granteeId === null && subscription.status === 'CANCELED') return null
                 const assignedBoards = boards.find((u) => u.id === l.granteeId) ?? null
                 return (
-                  <React.Fragment key={`licenses_${l.uuid}`}>
+                  <React.Fragment key={`seat_${l.uuid}`}>
                     <AssignBoard
                       assignedBoard={assignedBoards}
-                      license={l}
+                      seat={l}
                       subscriptionStatus={subscription.status}
                       nonLicensedBoards={nonLicensedBoards}
+                      subscriptionUuid={uuid}
                       key={`assign_users_${i}`}
                       setRefetch={setFetchSeats}
                     />

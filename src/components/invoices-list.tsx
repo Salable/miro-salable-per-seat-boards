@@ -1,10 +1,10 @@
 'use client'
 import {useEffect, useState} from "react";
-import {getSubscriptionInvoices} from "../actions/subscriptions";
 import {PaginatedSubscriptionInvoice} from "@salable/node-sdk/dist/src/types";
 import {FetchError} from "./fetch-error";
 import {format} from "date-fns";
 import Link from "next/link";
+import axios from "axios";
 
 export const InvoicesList = ({uuid}: {uuid: string}) => {
   const [invoices, setInvoices] = useState<PaginatedSubscriptionInvoice | null>(null)
@@ -15,9 +15,14 @@ export const InvoicesList = ({uuid}: {uuid: string}) => {
       try {
         setLoading(true)
         const board = await miro.board.getInfo()
-        const data = await getSubscriptionInvoices(uuid, board.id)
-        if (data.data) setInvoices(data.data)
-        if (data.error) setError(data.error)
+        const token = await miro.board.getIdToken();
+        
+        const response = await axios.get(
+          `/api/subscriptions/${uuid}/invoices?boardId=${board.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data) setInvoices(response.data)
+        if (response.data?.error) setError(response.data.error)
         setLoading(false)
       } catch (e) {
         setLoading(false)

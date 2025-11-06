@@ -1,9 +1,8 @@
-'use server'
-import {Result} from "../licenses/check";
-import initMiroApi from "../../utils/init-miro-api";
+import initMiroApi from "./init-miro-api";
 
 export type AllowedShapes = 'rectangle' | 'triangle' | 'circle'
-export const createShape = async (boardId: string, shape: AllowedShapes): Promise<Result<null>> => {
+
+export const createShape = async (boardId: string, shape: AllowedShapes) => {
   try {
     const {userId, miro} = initMiroApi()
     const api = miro.as(userId)
@@ -25,7 +24,6 @@ export const createShape = async (boardId: string, shape: AllowedShapes): Promis
       error: null,
     }
   } catch (e) {
-    console.log(e)
     return {
       data: null,
       error: 'Failed to create shape'
@@ -42,3 +40,4 @@ function getShapeColour(shape: AllowedShapes) {
       throw new Error(`Unsupported shape ${shape}`)
   }
 }
+

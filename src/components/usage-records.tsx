@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import {PaginatedUsageRecords} from "@salable/node-sdk/dist/src/types";
 import {FetchError} from "./fetch-error";
 import {format} from "date-fns";
-import {getUsageRecords} from "../actions/usage";
+import axios from "axios";
 
 export const UsageRecords = ({subscriptionUuid, planUuid}: {subscriptionUuid: string; planUuid: string}) => {
   const [records, setRecords] = useState<PaginatedUsageRecords | null>(null)
@@ -14,17 +14,18 @@ export const UsageRecords = ({subscriptionUuid, planUuid}: {subscriptionUuid: st
       try {
         setLoading(true)
         const board = await miro.board.getInfo()
-        const data = await getUsageRecords({
-          subscriptionUuid,
-          planUuid,
-          boardId: board.id,
-        })
-        if (data.data) setRecords(data.data)
-        if (data.error) setError(data.error)
+        const token = await miro.board.getIdToken();
+        
+        const response = await axios.get(
+          `/api/usage?planUuid=${planUuid}&subscriptionUuid=${subscriptionUuid}&boardId=${board.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data) setRecords(response.data)
+        if (response.data?.error) setError(response.data.error)
         setLoading(false)
       } catch (e) {
         setLoading(false)
-        setError('Failed to fetch subscription invoices')
+        setError('Failed to fetch usage records')
       }
     }
     fetchData()

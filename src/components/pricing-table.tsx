@@ -5,14 +5,13 @@ import {Circle} from "./icons/circle";
 import React, {useEffect, useState} from "react";
 import {PlanButton} from "./plan-button";
 import {salableBasicPlanUuid, salableProPlanUuid} from "../app/constants";
-import {CheckLicensesCapabilitiesResponse} from "@salable/node-sdk/dist/src/types";
-import {licenseCheck} from "../actions/licenses/check";
-import {isBoardOwner} from "../actions/board";
+import {EntitlementCheck} from "@salable/node-sdk/dist/src/types";
 import {FetchError} from "./fetch-error";
 import Link from "next/link";
+import axios from "axios";
 
-export const PricingTable = ({userId}: {userId: string}) => {
-  const [check, setCheck] = useState<CheckLicensesCapabilitiesResponse | null>(null)
+export const PricingTable = () => {
+  const [check, setCheck] = useState<EntitlementCheck | null>(null)
   const [isOwner, setIsOwner] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,15 +19,29 @@ export const PricingTable = ({userId}: {userId: string}) => {
     async function fetchData() {
       try {
         const boardInfo = await miro.board.getInfo()
-        const isBoardOwnerData = await isBoardOwner(boardInfo.id)
-        if (isBoardOwnerData.error) setError(isBoardOwnerData.error)
-        if (isBoardOwnerData.data !== null) setIsOwner(isBoardOwnerData.data)
-        const data = await licenseCheck([userId, boardInfo.id])
-        if (data.data) setCheck(data.data)
+        const token = await miro.board.getIdToken();
+        const userInfo = await miro.board.getUserInfo();
+        
+        const isBoardOwnerResponse = await axios.get(
+          `/api/board/is-owner?boardId=${boardInfo.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (isBoardOwnerResponse.data.isOwner !== undefined) {
+          setIsOwner(isBoardOwnerResponse.data.isOwner);
+        }
+        if (isBoardOwnerResponse.data.error) {
+          setError(isBoardOwnerResponse.data.error);
+        }
+        
+        const entitlementsResponse = await axios.post(
+          '/api/entitlements/check',
+          { granteeIds: [userInfo.id, boardInfo.id] },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (entitlementsResponse.data) setCheck(entitlementsResponse.data)
         setLoading(false)
       } catch (e) {
         setLoading(false)
-        console.log(e)
       }
     }
     fetchData()
@@ -57,8 +70,8 @@ export const PricingTable = ({userId}: {userId: string}) => {
             <span className='text-xs font-light'>(per month)</span>
           </div>
           <BasicPlanPricingTableButton
-            isSubscribed={!!check?.capabilities.find((c) => c.capability === 'basic_board')}
-            hasSubscriptions={!!(check?.capabilities && check?.capabilities?.length > 0)}
+            isSubscribed={!!check?.features.find((f) => f.feature === 'basic_board')}
+            hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
         </div>
 
@@ -82,8 +95,8 @@ export const PricingTable = ({userId}: {userId: string}) => {
           </div>
           <ProPlanPricingTableButton
             isBoardOwner={isOwner}
-            isSubscribed={!!check?.capabilities.find((c) => c.capability === 'pro_board')}
-            hasSubscriptions={!!(check?.capabilities && check?.capabilities?.length > 0)}
+            isSubscribed={!!check?.features.find((f) => f.feature === 'pro_board')}
+            hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
         </div>
 

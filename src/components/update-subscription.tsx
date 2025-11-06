@@ -1,7 +1,8 @@
 'use client'
 import React, {useEffect, useState, Dispatch, SetStateAction} from "react";
 import LoadingSpinner from "./loading-spinner";
-import {addSeats, removeSeats, SubscriptionExpandedPlanCurrency} from "../actions/subscriptions";
+import {SubscriptionExpandedPlanCurrency} from "../app/api/subscriptions/types";
+import axios from "axios";
 
 export const UpdateSubscription = ({
   seatCount,
@@ -17,22 +18,21 @@ export const UpdateSubscription = ({
   const handleClickUpdateSubscription = async () => {
     if (updatedSeatCount) {
       const board = await miro.board.getInfo()
+      const token = await miro.board.getIdToken();
       setIsChangingSeatCount(true)
-      if (updatedSeatCount > seatCount) {
-        await addSeats({
-          increment: updatedSeatCount - seatCount,
-          uuid: subscription.uuid,
-          boardId: board.id
-        })
+      
+      try {
+        await axios.post(
+          `/api/subscriptions/${subscription.uuid}/update-seat-count`,
+          {
+            seatCount: updatedSeatCount,
+            boardId: board.id
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setFetchSeats(true)
-      }
-      if (updatedSeatCount < seatCount) {
-        await removeSeats({
-          decrement: Math.abs(updatedSeatCount - seatCount),
-          uuid: subscription.uuid,
-          boardId: board.id
-        })
-        setFetchSeats(true)
+      } catch (error) {
+        console.error(error);
       }
     }
     setIsChangingSeatCount(false)

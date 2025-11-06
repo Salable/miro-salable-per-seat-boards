@@ -1,18 +1,57 @@
 'use client'
 import React, {useState} from "react";
-import {cancelSubscription} from "../actions/subscriptions";
 import LoadingSpinner from "./loading-spinner";
+import axios from "axios";
+import { KeyedMutator } from "swr";
+import { SubscriptionExpandedPlanCurrency } from "../app/api/subscriptions/types";
 
-export const CancelPlanButton = ({subscriptionUuid}: {subscriptionUuid: string}) => {
+export const CancelPlanButton = ({
+  subscriptionUuid,
+  mutate,
+}: {
+  subscriptionUuid: string;
+  mutate: KeyedMutator<SubscriptionExpandedPlanCurrency>;
+}) => {
   const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
 
   const handleClick = async () => {
-    setIsCancellingSubscription(true)
-    const cancel = await cancelSubscription(subscriptionUuid)
-    if (cancel?.error) {
-      console.log(cancel.error)
+    try {
+      setIsCancellingSubscription(true);
+      const token = await miro.board.getIdToken();
+      await axios.post(
+        `/api/subscriptions/${subscriptionUuid}/cancel`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await new Promise<void>(async (resolve) => {
+        while (true) {
+          try {
+            const board = await miro.board.getInfo();
+            const subscriptionResponse = await axios.get(
+              `/api/subscriptions/${subscriptionUuid}?boardId=${board.id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (subscriptionResponse.data?.status === 'CANCELED') {
+              await mutate();
+              resolve();
+              break;
+            }
+            await new Promise((r) => setTimeout(r, 500));
+          } catch (e) {
+            break;
+          }
+        }
+      });
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.data?.error) {
+        console.error(e.response.data.error);
+      } else {
+        console.error(e);
+      }
+    } finally {
+      setIsCancellingSubscription(false);
     }
-    setIsCancellingSubscription(false)
   }
 
   return (

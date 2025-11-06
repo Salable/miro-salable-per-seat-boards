@@ -2,8 +2,9 @@
 import Link from "next/link";
 import React, {useEffect, useState} from "react";
 import {UserInfoWithEmail} from "@mirohq/websdk-types/stable/api/board";
-import {getAllSubscriptions, SubscriptionExpandedPlan} from "../actions/subscriptions";
+import {SubscriptionExpandedPlan} from "../app/api/subscriptions/types";
 import {FetchError} from "./fetch-error";
+import axios from "axios";
 
 export const SubscriptionsList = () => {
   const [loading, setLoading] = useState(true)
@@ -14,14 +15,18 @@ export const SubscriptionsList = () => {
     async function fetchData() {
       try {
         const userData = await miro.board.getUserInfo() as UserInfoWithEmail
-        const subscriptionData = await getAllSubscriptions(userData.email)
-        if (subscriptionData.data?.data) setSubscriptions(subscriptionData.data.data)
-        if (subscriptionData.error) setError(subscriptionData.error)
+        const token = await miro.board.getIdToken();
+        
+        const subscriptionResponse = await axios.get(
+          `/api/subscriptions?email=${userData.email}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (subscriptionResponse.data?.data) setSubscriptions(subscriptionResponse.data.data)
+        if (subscriptionResponse.data?.error) setError(subscriptionResponse.data.error)
         setLoading(false)
       } catch (e) {
         setLoading(false)
         setError('Failed to fetch subscriptions')
-        console.log(e)
       }
     }
     fetchData()

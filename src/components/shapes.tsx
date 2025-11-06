@@ -1,31 +1,38 @@
 'use client'
-import {licenseCheck} from "../actions/licenses/check";
-import {AllowedShapes} from "../actions/shapes";
+import {AllowedShapes} from "../utils/shapes";
 import React, {useEffect, useState} from "react";
-import {CheckLicensesCapabilitiesResponse} from "@salable/node-sdk/dist/src/types";
+import {EntitlementCheck} from "@salable/node-sdk/dist/src/types";
 import {TriangleIcon} from "./icons/triangle";
 import {Circle} from "./icons/circle";
 import {BoardInfo} from "@mirohq/websdk-types/stable/api/board";
 import LoadingSpinner from "./loading-spinner";
-import {updateUsageAndCreateShape} from "../actions/licenses/usage";
+import axios from "axios";
 
 const shapes: AllowedShapes[] = ['rectangle', 'triangle', 'circle']
 
-export const Shapes = ({userId}: {userId: string}) => {
-  const [check, setCheck] = useState<CheckLicensesCapabilitiesResponse | null>(null)
+export const Shapes = () => {
+  const [check, setCheck] = useState<EntitlementCheck | null>(null)
   const [loading, setLoading] = useState(true)
   const [board, setBoard] = useState<BoardInfo | null>(null)
+  const [userId, setUserId] = useState<string>('')
   useEffect(() => {
     async function fetchData() {
       try {
+        const token = await miro.board.getIdToken();
         const boardInfo = await miro.board.getInfo()
+        const userInfo = await miro.board.getUserInfo()
         setBoard(boardInfo)
-        const data = await licenseCheck([userId, boardInfo.id])
-        if (data.data) setCheck(data.data)
+        setUserId(userInfo.id)
+        
+        const entitlementsResponse = await axios.post(
+          '/api/entitlements/check',
+          { granteeIds: [userInfo.id, boardInfo.id] },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (entitlementsResponse.data) setCheck(entitlementsResponse.data)
         setLoading(false)
       } catch (e) {
         setLoading(false)
-        console.log(e)
       }
     }
     fetchData()
@@ -44,21 +51,21 @@ export const Shapes = ({userId}: {userId: string}) => {
   return (
     <>
       {shapes.map((shape, i) => {
-        const hasCapability = check?.capabilities.find((c) => c.capability === shape)
+        const hasFeatures = check?.features.find((f) => f.feature === shape)
         return (
           <div className='flex items-center justify-between p-6 mb-3 rounded-md bg-blue-50' key={`shape-${i}`}>
             <div className='mr-6 w-[120px]'>
-              <Shape shape={shape} disabled={!hasCapability}  />
+              <Shape shape={shape} disabled={!hasFeatures}  />
             </div>
             <div className='flex flex-col justify-center grow'>
               <div className='flex justify-center'>
-                <AddShapeButton userId={userId} boardId={board?.id} shape={shape} hasCapability={!!hasCapability} />
+                <AddShapeButton userId={userId} boardId={board?.id} shape={shape} hasFeatures={!!hasFeatures} />
               </div>
             </div>
           </div>
         );
       })}
-      {!check?.capabilities.length ? (
+      {!check?.features.length ? (
         <div>
           <p>To start using shapes subscribe to our product and get started!</p>
           <button
@@ -98,22 +105,26 @@ const Shape = ({shape, disabled}:{shape: string, disabled: boolean}) => {
   }
 }
 
-const AddShapeButton = ({shape, boardId, userId, hasCapability}: {shape: AllowedShapes; boardId: string; userId: string; hasCapability: boolean}) => {
+const AddShapeButton = ({shape, boardId, userId, hasFeatures}: {shape: AllowedShapes; boardId: string; userId: string; hasFeatures: boolean}) => {
   const [isCreatingShape, setIsCreatingShape] = useState<boolean>(false)
   const handleClick = async () => {
     try {
       setIsCreatingShape(true)
-      await updateUsageAndCreateShape({userId, boardId, shape})
+      const token = await miro.board.getIdToken();
+      await axios.post(
+        '/api/shapes/create',
+        { userId, boardId, shape },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setIsCreatingShape(false)
     } catch (e) {
       setIsCreatingShape(false)
-      console.log(e)
     }
   }
   return (
     <button
       className={'py-2 px-4 mb-2 rounded-sm leading-none font-light bg-white border-2 border-solid border-blue-500 text-blue-500 disabled:text-gray-500 disabled:border-gray-500 disabled:opacity-50 cursor-pointer disabled:cursor-auto'}
-      disabled={!hasCapability}
+      disabled={!hasFeatures}
       onClick={handleClick}
     >
       {isCreatingShape ? <div className='w-[16px]'><LoadingSpinner fill="#2B7FFF"/></div> : "Add shape"}

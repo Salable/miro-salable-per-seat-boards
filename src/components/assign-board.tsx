@@ -1,23 +1,26 @@
 'use client'
 import React, {useRef, useState} from "react";
 import {useOnClickOutside} from "usehooks-ts";
-import {License} from "@salable/node-sdk/dist/src/types";
-import {BoardData} from "../actions/board";
+import {Seat, ManageSeatOptions} from "@salable/node-sdk/dist/src/types";
+import {SeatActionType} from "../types/salable";
+import {BoardData} from "../app/api/board/all/route";
 import LoadingSpinner from "./loading-spinner";
-import {updateLicense} from "../actions/licenses/update";
+import axios from "axios";
 
 export const AssignBoard = (
   {
     assignedBoard,
     nonLicensedBoards,
     subscriptionStatus,
-    license,
+    seat,
+    subscriptionUuid,
     setRefetch
   }: {
     assignedBoard: BoardData | null,
     nonLicensedBoards: BoardData[],
     subscriptionStatus: string,
-    license: License,
+    seat: Seat,
+    subscriptionUuid: string,
     setRefetch: React.Dispatch<React.SetStateAction<boolean>>
   },
 ) => {
@@ -32,16 +35,20 @@ export const AssignBoard = (
     try {
       setShowBoards(false)
       setIsUpdatingUser(true)
-      await updateLicense({
-        uuid: license.uuid,
-        granteeId
-      })
-      // if (updateUser?.error) toast.error(updateUser.error)
+      const token = await miro.board.getIdToken();
+      const options = [{
+        type: SeatActionType.assign,
+        granteeId,
+      }] as ManageSeatOptions[];
+      await axios.patch(
+        `/api/subscriptions/${subscriptionUuid}/manage-seats`,
+        options,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setIsUpdatingUser(false)
       setRefetch(true)
     } catch (e) {
       console.error(e)
-      // toast.error('Failed to update license')
       setIsUpdatingUser(false)
     }
   }
@@ -49,16 +56,21 @@ export const AssignBoard = (
     try {
       setShowBoards(false)
       setIsUpdatingUser(true)
-      await updateLicense({
-        uuid: license.uuid,
-        granteeId: null
-      })
-      // if (updateUser?.error) toast.error(updateUser.error)
+      const token = await miro.board.getIdToken();
+      if (!seat.granteeId) return;
+      const options = [{
+        type: SeatActionType.unassign,
+        granteeId: seat.granteeId,
+      }] as ManageSeatOptions[];
+      await axios.patch(
+        `/api/subscriptions/${subscriptionUuid}/manage-seats`,
+        options,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setIsUpdatingUser(false)
       setRefetch(true)
     } catch (e) {
       console.error(e)
-      // toast.error('Failed to update license')
       setIsUpdatingUser(false)
     }
   }
@@ -128,7 +140,7 @@ export const AssignBoard = (
         <div className='flex items-center'>
           {subscriptionStatus !== 'CANCELED' ? (
             <>
-              {license.granteeId ? (
+              {seat.granteeId ? (
                 <>
                   {isUpdatingUser ? (
                     <div className='h-[14px] w-[14px]'><LoadingSpinner fill='#000000'/></div>
