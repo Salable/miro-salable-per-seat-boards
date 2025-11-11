@@ -2,10 +2,15 @@
 import React, {useRef, useState} from "react";
 import {useOnClickOutside} from "usehooks-ts";
 import {Seat, ManageSeatOptions} from "@salable/node-sdk/dist/src/types";
-import {SeatActionType} from "../app/api/subscriptions/[uuid]/manage-seats/route";
 import {BoardData} from "../app/api/board/all/route";
 import LoadingSpinner from "./loading-spinner";
 import axios from "axios";
+
+const SeatActionType = {
+  assign: "assign",
+  unassign: "unassign",
+  replace: "replace"
+} as const;
 
 export const AssignBoard = (
   {
