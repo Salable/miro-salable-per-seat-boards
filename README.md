@@ -30,7 +30,9 @@ This Miro app demonstrates using [per-seat](https://www.salable.app/features/per
 13. Create Plan.
 14. Repeat the above steps for a `Pro` plan but with the changes in the next steps.
 15. Set the per-seat cost as `2` plan which will bill the customer £2 per board they have access to.
-16.  Select both existing features `triangle` and `rectangle`.
+16. Select both existing features `triangle` and `rectangle`.
+17. Create a new boolean feature called circle. Set it to true on the Pro plan and false on the Basic plan.
+
 
 ### Update Environment Variables
 

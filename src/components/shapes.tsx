@@ -14,19 +14,15 @@ export const Shapes = () => {
   const [check, setCheck] = useState<EntitlementCheck | null>(null)
   const [loading, setLoading] = useState(true)
   const [board, setBoard] = useState<BoardInfo | null>(null)
-  const [userId, setUserId] = useState<string>('')
   useEffect(() => {
     async function fetchData() {
       try {
         const token = await miro.board.getIdToken();
         const boardInfo = await miro.board.getInfo()
-        const userInfo = await miro.board.getUserInfo()
         setBoard(boardInfo)
-        setUserId(userInfo.id)
         
-        const entitlementsResponse = await axios.post(
-          '/api/entitlements/check',
-          { granteeIds: [userInfo.id, boardInfo.id] },
+        const entitlementsResponse = await axios.get(
+          `/api/entitlements/check?granteeIds=${encodeURIComponent(boardInfo.id)}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (entitlementsResponse.data) setCheck(entitlementsResponse.data)
@@ -59,7 +55,7 @@ export const Shapes = () => {
             </div>
             <div className='flex flex-col justify-center grow'>
               <div className='flex justify-center'>
-                <AddShapeButton userId={userId} boardId={board?.id} shape={shape} hasFeatures={!!hasFeatures} />
+                <AddShapeButton boardId={board?.id} shape={shape} hasFeatures={!!hasFeatures} />
               </div>
             </div>
           </div>
@@ -105,7 +101,7 @@ const Shape = ({shape, disabled}:{shape: string, disabled: boolean}) => {
   }
 }
 
-const AddShapeButton = ({shape, boardId, userId, hasFeatures}: {shape: AllowedShapes; boardId: string; userId: string; hasFeatures: boolean}) => {
+const AddShapeButton = ({shape, boardId, hasFeatures}: {shape: AllowedShapes; boardId: string; hasFeatures: boolean}) => {
   const [isCreatingShape, setIsCreatingShape] = useState<boolean>(false)
   const handleClick = async () => {
     try {
@@ -113,7 +109,7 @@ const AddShapeButton = ({shape, boardId, userId, hasFeatures}: {shape: AllowedSh
       const token = await miro.board.getIdToken();
       await axios.post(
         '/api/shapes/create',
-        { userId, boardId, shape },
+        { boardId, shape },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsCreatingShape(false)

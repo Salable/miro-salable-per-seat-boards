@@ -2,7 +2,7 @@
 import Link from "next/link";
 import React, {useEffect, useState} from "react";
 import {UserInfoWithEmail} from "@mirohq/websdk-types/stable/api/board";
-import {SubscriptionExpandedPlan} from "../app/api/subscriptions/types";
+import {SubscriptionExpandedPlan} from "../app/api/subscriptions/route";
 import {FetchError} from "./fetch-error";
 import axios from "axios";
 

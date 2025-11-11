@@ -3,7 +3,7 @@ import React, {useState} from "react";
 import LoadingSpinner from "./loading-spinner";
 import axios from "axios";
 import { KeyedMutator } from "swr";
-import { SubscriptionExpandedPlanCurrency } from "../app/api/subscriptions/types";
+import { SubscriptionExpandedPlanCurrency } from "../app/api/subscriptions/[uuid]/route";
 
 export const ChangePlanButton = ({
   subscriptionUuid,
@@ -25,7 +25,7 @@ export const ChangePlanButton = ({
       const token = await miro.board.getIdToken();
       await axios.post(
         `/api/subscriptions/${subscriptionUuid}/change-plan`,
-        { planUuid, boardId: board.id },
+        { planUuid },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

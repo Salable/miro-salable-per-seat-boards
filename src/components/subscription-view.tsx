@@ -2,7 +2,7 @@
 import {CancelPlanButton} from "./cancel-plan-button";
 import {FetchError} from "./fetch-error";
 import React, {useEffect, useState} from "react";
-import {SubscriptionExpandedPlanCurrency} from "../app/api/subscriptions/types";
+import {SubscriptionExpandedPlanCurrency} from "../app/api/subscriptions/[uuid]/route";
 import {notFound} from "next/navigation";
 import Link from "next/link";
 import {BoardData} from "../app/api/board/all/route";
@@ -93,7 +93,6 @@ const Seats = ({
   const [nonLicensedBoards, setNonLicensedBoards] = useState<BoardData[] | null>(null)
   const [boardsError, setBoardsError] = useState<string | null>(null)
   const [subscriptionSeats, setSubscriptionSeats] = useState<PaginatedSeats | null>(null)
-  const [seatsError, setSeatsError] = useState<string | null>(null)
   useEffect(() => {
     async function fetchData() {
       if (!fetchSeats) return
@@ -104,7 +103,6 @@ const Seats = ({
           `/api/subscriptions/${uuid}/seats`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        const seats = seatsResponse.data ? { data: seatsResponse.data, error: null } : { data: null, error: null };
         
         const boardsResponse = await axios.get(
           '/api/board/all',
@@ -117,11 +115,10 @@ const Seats = ({
           setBoardsError(boardsResponse.data.error);
         }
         
-        if (seats.data) setSubscriptionSeats(seats.data)
-        if (seats.error) setSeatsError(seats.error)
+        setSubscriptionSeats(seatsResponse.data)
         
         const nonLicensedBoards = boardsResponse.data.boards?.reduce((arr: BoardData[], b: BoardData) => {
-          if (!seats.data?.data.find((s: Seat) => s.granteeId === b.id)) arr.push(b)
+          if (!seatsResponse.data?.data.find((s: Seat) => s.granteeId === b.id)) arr.push(b)
           return arr
         }, [])
         if (nonLicensedBoards) setNonLicensedBoards(nonLicensedBoards)
@@ -136,7 +133,6 @@ const Seats = ({
   }, [fetchSeats]);
   if (loading) return <LoadingSeats />
   if (boardsError) return <FetchError error={boardsError}/>
-  if (seatsError) return <FetchError error={seatsError}/>
 
   return (
     <>

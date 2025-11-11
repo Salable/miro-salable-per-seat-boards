@@ -2,7 +2,7 @@
 import React, {useRef, useState} from "react";
 import {useOnClickOutside} from "usehooks-ts";
 import {Seat, ManageSeatOptions} from "@salable/node-sdk/dist/src/types";
-import {SeatActionType} from "../types/salable";
+import {SeatActionType} from "../app/api/subscriptions/[uuid]/manage-seats/route";
 import {BoardData} from "../app/api/board/all/route";
 import LoadingSpinner from "./loading-spinner";
 import axios from "axios";
@@ -40,7 +40,7 @@ export const AssignBoard = (
         type: SeatActionType.assign,
         granteeId,
       }] as ManageSeatOptions[];
-      await axios.patch(
+      await axios.put(
         `/api/subscriptions/${subscriptionUuid}/manage-seats`,
         options,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -62,7 +62,7 @@ export const AssignBoard = (
         type: SeatActionType.unassign,
         granteeId: seat.granteeId,
       }] as ManageSeatOptions[];
-      await axios.patch(
+      await axios.put(
         `/api/subscriptions/${subscriptionUuid}/manage-seats`,
         options,
         { headers: { Authorization: `Bearer ${token}` } }

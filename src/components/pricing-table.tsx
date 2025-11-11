@@ -12,7 +12,6 @@ import axios from "axios";
 
 export const PricingTable = () => {
   const [check, setCheck] = useState<EntitlementCheck | null>(null)
-  const [isOwner, setIsOwner] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -20,28 +19,16 @@ export const PricingTable = () => {
       try {
         const boardInfo = await miro.board.getInfo()
         const token = await miro.board.getIdToken();
-        const userInfo = await miro.board.getUserInfo();
         
-        const isBoardOwnerResponse = await axios.get(
-          `/api/board/is-owner?boardId=${boardInfo.id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (isBoardOwnerResponse.data.isOwner !== undefined) {
-          setIsOwner(isBoardOwnerResponse.data.isOwner);
-        }
-        if (isBoardOwnerResponse.data.error) {
-          setError(isBoardOwnerResponse.data.error);
-        }
-        
-        const entitlementsResponse = await axios.post(
-          '/api/entitlements/check',
-          { granteeIds: [userInfo.id, boardInfo.id] },
+        const entitlementsResponse = await axios.get(
+          `/api/entitlements/check?granteeIds=${encodeURIComponent(boardInfo.id)}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (entitlementsResponse.data) setCheck(entitlementsResponse.data)
         setLoading(false)
       } catch (e) {
         setLoading(false)
+        setError('Failed to fetch data')
       }
     }
     fetchData()
@@ -94,7 +81,6 @@ export const PricingTable = () => {
             <span className='text-xs font-light'>(per month)</span>
           </div>
           <ProPlanPricingTableButton
-            isBoardOwner={isOwner}
             isSubscribed={!!check?.features.find((f) => f.feature === 'pro_board')}
             hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
@@ -129,16 +115,7 @@ const BasicPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscr
   return <PlanButton planUuid={salableBasicPlanUuid} />
 }
 
-const ProPlanPricingTableButton = ({isBoardOwner, isSubscribed, hasSubscriptions}: {isBoardOwner: boolean; isSubscribed: boolean; hasSubscriptions: boolean}) => {
-  if (!isBoardOwner) {
-    return (
-      <div
-        className='p-4 rounded-md leading-none font-light text-sm transition flex items-center justify-center w-full bg-white text-blue-700 border-2 border-solid border-blue-700'
-      >
-        Contact board owner
-      </div>
-    )
-  }
+const ProPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscribed: boolean; hasSubscriptions: boolean}) => {
   if (isSubscribed) {
     return (
       <div

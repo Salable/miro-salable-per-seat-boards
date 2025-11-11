@@ -14,11 +14,10 @@ export const InvoicesList = ({uuid}: {uuid: string}) => {
     async function fetchData() {
       try {
         setLoading(true)
-        const board = await miro.board.getInfo()
         const token = await miro.board.getIdToken();
         
         const response = await axios.get(
-          `/api/subscriptions/${uuid}/invoices?boardId=${board.id}`,
+          `/api/subscriptions/${uuid}/invoices`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data) setInvoices(response.data)

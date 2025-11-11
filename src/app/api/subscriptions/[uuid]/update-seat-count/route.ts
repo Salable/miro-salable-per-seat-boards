@@ -1,17 +1,14 @@
 import { withAuth } from "../../../../../utils/withAuth";
-import initMiroApi from "../../../../../utils/init-miro-api";
 import { State } from "../../../entitlements/check/route";
 import { salable } from "../../../../salable";
 import { NextRequest } from "next/server";
-import { cookies } from "next/headers";
 import { z } from "zod";
 
 const schema = z.object({
   seatCount: z.number(),
-  boardId: z.string(),
 });
 
-export const POST = withAuth(async (state: State, request: NextRequest, context: { params: Promise<Record<string, string>> }) => {
+export const POST = withAuth(async (_state: State, request: NextRequest, context: { params: Promise<Record<string, string>> }) => {
   try {
     const { uuid } = await context.params;
     const rawBody = await request.json();
@@ -30,31 +27,10 @@ export const POST = withAuth(async (state: State, request: NextRequest, context:
       );
     }
 
-    const { seatCount, boardId } = parseResult.data;
-
-    const cookieInstance = cookies();
-    const tokenCookie = cookieInstance.get("MIRO_SALABLE_TOKEN_USAGE");
-    
-    if (!tokenCookie?.value) {
-      return new Response(JSON.stringify({ error: "No access token available" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const { miro } = initMiroApi();
-    const api = miro.as(state.user);
-    const board = await api.getBoard(boardId);
-    
-    if (board.owner?.id !== state.user) {
-      return new Response(JSON.stringify({ error: "Unauthorised" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+    const { seatCount } = parseResult.data;
 
     const subscription = await salable.subscriptions.getOne(uuid);
-    const currentSeatCount = subscription.quantity || 0;
+    const currentSeatCount = subscription.quantity;
     const difference = seatCount - currentSeatCount;
 
     if (difference === 0) {

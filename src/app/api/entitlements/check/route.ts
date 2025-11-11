@@ -12,13 +12,22 @@ export type State = {
   iat: number;
 };
 
-export const POST = withAuth(async (_state: State, request: NextRequest) => {
+export const GET = withAuth(async (_state: State, request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { granteeIds } = body;
+    const { searchParams } = new URL(request.url);
+    const granteeIdsParam = searchParams.get("granteeIds");
 
-    if (!granteeIds || !Array.isArray(granteeIds)) {
-      return new Response(JSON.stringify({ error: "Missing or invalid granteeIds" }), {
+    if (!granteeIdsParam) {
+      return new Response(JSON.stringify({ error: "Missing granteeIds query parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const granteeIds = granteeIdsParam.split(",").map((id) => id.trim()).filter(Boolean);
+
+    if (granteeIds.length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid granteeIds query parameter" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });

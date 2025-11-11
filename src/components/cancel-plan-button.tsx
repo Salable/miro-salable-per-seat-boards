@@ -3,7 +3,7 @@ import React, {useState} from "react";
 import LoadingSpinner from "./loading-spinner";
 import axios from "axios";
 import { KeyedMutator } from "swr";
-import { SubscriptionExpandedPlanCurrency } from "../app/api/subscriptions/types";
+import { SubscriptionExpandedPlanCurrency } from "../app/api/subscriptions/[uuid]/route";
 
 export const CancelPlanButton = ({
   subscriptionUuid,
@@ -18,9 +18,8 @@ export const CancelPlanButton = ({
     try {
       setIsCancellingSubscription(true);
       const token = await miro.board.getIdToken();
-      await axios.post(
+      await axios.delete(
         `/api/subscriptions/${subscriptionUuid}/cancel`,
-        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

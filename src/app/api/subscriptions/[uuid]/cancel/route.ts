@@ -3,7 +3,7 @@ import { salable } from "../../../../salable";
 import { NextRequest } from "next/server";
 import { State } from "../../../entitlements/check/route";
 
-export const POST = withAuth(async (_state: State, _request: NextRequest, context) => {
+export const DELETE = withAuth(async (_state: State, _request: NextRequest, context) => {
   try {
     const { uuid } = await context.params;
     await salable.subscriptions.cancel(uuid, { when: "now" });

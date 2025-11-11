@@ -7,7 +7,6 @@ import { State } from "../../entitlements/check/route";
 import { z } from "zod";
 
 const schema = z.object({
-  userId: z.string(),
   boardId: z.string(),
   shape: z.enum(["rectangle", "triangle", "circle"]),
 });
@@ -30,17 +29,17 @@ export const POST = withAuth(async (_state: State, request: NextRequest) => {
       );
     }
 
-    const { userId, boardId, shape } = parseResult.data;
+    const { boardId, shape } = parseResult.data;
 
     const check = await salable.entitlements.check({
       productUuid: salableProductUuid,
-      granteeIds: [userId, boardId],
+      granteeIds: [boardId],
     });
 
     const features = check?.features;
-    const hasShapeCapability = features?.find((f) => f.feature === shape);
+    const hasFeature = features?.find((f) => f.feature === shape);
 
-    if (!hasShapeCapability) {
+    if (!hasFeature) {
       return new Response(JSON.stringify({ error: "Unauthorised" }), {
         status: 403,
         headers: { "Content-Type": "application/json" },
@@ -49,9 +48,8 @@ export const POST = withAuth(async (_state: State, request: NextRequest) => {
 
     await createShape(boardId, shape as AllowedShapes);
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(null, {
       status: 200,
-      headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: "Failed to create shape" }), {

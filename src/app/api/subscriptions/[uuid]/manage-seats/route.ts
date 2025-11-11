@@ -4,7 +4,15 @@ import { NextRequest } from "next/server";
 import { State } from "../../../entitlements/check/route";
 import { ManageSeatOptions } from "@salable/node-sdk/dist/src/types";
 
-export const PATCH = withAuth(async (_state: State, request: NextRequest, context: { params: Promise<Record<string, string>> }) => {
+export const SeatActionType = {
+  assign: "assign",
+  unassign: "unassign",
+  replace: "replace"
+} as const;
+
+export type SeatActionType = typeof SeatActionType[keyof typeof SeatActionType];
+
+export const PUT = withAuth(async (_state: State, request: NextRequest, context: { params: Promise<Record<string, string>> }) => {
   try {
     const { uuid } = await context.params;
     const body = await request.json();
