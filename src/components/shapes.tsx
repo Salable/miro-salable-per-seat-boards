@@ -47,7 +47,7 @@ export const Shapes = () => {
   return (
     <>
       {shapes.map((shape, i) => {
-        const hasFeatures = check?.features.find((f) => f.feature === shape)
+        const hasFeatures = check?.features.some((f) => f.feature === shape)
         return (
           <div className='flex items-center justify-between p-6 mb-3 rounded-md bg-blue-50' key={`shape-${i}`}>
             <div className='mr-6 w-[120px]'>
