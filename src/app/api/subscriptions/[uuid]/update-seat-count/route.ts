@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 
 const schema = z.object({
-  seatCount: z.number(),
+  seatCount: z.number().int().positive().min(1),
 });
 
 export const POST = withAuth(async (_state: State, request: NextRequest, context: { params: Promise<Record<string, string>> }) => {
@@ -54,7 +54,29 @@ export const POST = withAuth(async (_state: State, request: NextRequest, context
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Failed to update seat count" }), {
+    let errorMessage = "Failed to update seat count";
+    
+    if (error && typeof error === 'object' && 'data' in error) {
+      const errorData = (error as { data?: unknown }).data;
+      if (errorData && typeof errorData === 'object' && 'error' in errorData && typeof errorData.error === 'string') {
+        errorMessage = errorData.error;
+      }
+    }
+    
+    if (errorMessage === "Failed to update seat count" && error instanceof Error && error.message) {
+      try {
+        const parsed = JSON.parse(error.message);
+        if (parsed?.data?.error && typeof parsed.data.error === 'string') {
+          errorMessage = parsed.data.error;
+        } else {
+          errorMessage = error.message;
+        }
+      } catch {
+        errorMessage = error.message;
+      }
+    }
+    
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });

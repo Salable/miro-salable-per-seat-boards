@@ -49,7 +49,6 @@ export const ChangePlanButton = ({
       });
     } catch (e) {
       if (axios.isAxiosError(e) && e.response?.data?.error) {
-        console.error(e.response.data.error);
       } else {
         console.error(e);
       }

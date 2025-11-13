@@ -23,7 +23,6 @@ export const GET = withAuth(async (_state: State, request: NextRequest, context:
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.log(e);
     return new Response(JSON.stringify({ error: "Failed to fetch subscription seats" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },

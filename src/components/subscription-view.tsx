@@ -1,6 +1,5 @@
 'use client'
 import {CancelPlanButton} from "./cancel-plan-button";
-import {FetchError} from "./fetch-error";
 import React, {useEffect, useState} from "react";
 import {SubscriptionExpandedPlanCurrency} from "../app/api/subscriptions/[uuid]/route";
 import {notFound} from "next/navigation";
@@ -28,7 +27,12 @@ export const SubscriptionView = ({uuid}: {uuid: string}) => {
   const [fetchSeats, setFetchSeats] = useState<boolean>(true)
   
   if (isLoading || !subscription) return <Loading />
-  if (error) return <FetchError error="Failed to load subscription"/>
+  if (error) return (
+    <div className='p-4 rounded-md bg-red-50 border border-red-200'>
+      <div className='text-red-700 font-medium mb-1'>Error</div>
+      <div className='text-red-600 text-sm'>Failed to load subscription</div>
+    </div>
+  )
   if (!subscription) return notFound()
   return (
     <>
@@ -63,6 +67,7 @@ export const SubscriptionView = ({uuid}: {uuid: string}) => {
           subscription={subscription}
           seatCount={subscription.quantity}
           setFetchSeats={setFetchSeats}
+          mutate={mutate}
         />
       </div>
       <div className='mt-6'>
@@ -92,10 +97,14 @@ const Seats = ({
   const [boards, setBoards] = useState<BoardData[] | null>(null)
   const [nonLicensedBoards, setNonLicensedBoards] = useState<BoardData[] | null>(null)
   const [boardsError, setBoardsError] = useState<string | null>(null)
+  const [seatsError, setSeatsError] = useState<string | null>(null)
   const [subscriptionSeats, setSubscriptionSeats] = useState<PaginatedSeats | null>(null)
   useEffect(() => {
     async function fetchData() {
       if (!fetchSeats) return
+      setLoading(true)
+      setBoardsError(null)
+      setSeatsError(null)
       try {
         const token = await miro.board.getIdToken();
         
@@ -115,7 +124,12 @@ const Seats = ({
           setBoardsError(boardsResponse.data.error);
         }
         
-        setSubscriptionSeats(seatsResponse.data)
+        if (seatsResponse.data) {
+          setSubscriptionSeats(seatsResponse.data)
+        }
+        if (seatsResponse.data?.error) {
+          setSeatsError(seatsResponse.data.error);
+        }
         
         const nonLicensedBoards = boardsResponse.data.boards?.reduce((arr: BoardData[], b: BoardData) => {
           if (!seatsResponse.data?.data.find((s: Seat) => s.granteeId === b.id)) arr.push(b)
@@ -127,12 +141,28 @@ const Seats = ({
       } catch (e) {
         setLoading(false)
         setFetchSeats(false)
+        if (axios.isAxiosError(e) && e.response?.data?.error) {
+          setSeatsError(e.response.data.error);
+        } else {
+          setSeatsError("Failed to fetch seats. Please try again.");
+        }
       }
     }
     fetchData()
-  }, [fetchSeats]);
+  }, [fetchSeats, uuid]);
   if (loading) return <LoadingSeats />
-  if (boardsError) return <FetchError error={boardsError}/>
+  if (boardsError) return (
+    <div className='p-4 rounded-md bg-red-50 border border-red-200'>
+      <div className='text-red-700 font-medium mb-1'>Error</div>
+      <div className='text-red-600 text-sm'>{boardsError}</div>
+    </div>
+  )
+  if (seatsError) return (
+    <div className='p-4 rounded-md bg-red-50 border border-red-200'>
+      <div className='text-red-700 font-medium mb-1'>Error</div>
+      <div className='text-red-600 text-sm'>{seatsError}</div>
+    </div>
+  )
 
   return (
     <>

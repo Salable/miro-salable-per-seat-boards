@@ -43,9 +43,12 @@ export const PlanButton = ({
       window.open(url, '_blank')
     } catch (e) {
       setIsFetchingUrl(false)
-    }
-    if (!url) {
-      console.error('Failed to create checkout link')
+      if (axios.isAxiosError(e) && e.response?.data?.error) {
+        const errorMessage = e.response.data.error;
+        setError(errorMessage);
+      } else {
+        setError('Failed to create checkout link. Please try again.');
+      }
     }
   }
 

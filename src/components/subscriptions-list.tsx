@@ -3,7 +3,6 @@ import Link from "next/link";
 import React, {useEffect, useState} from "react";
 import {UserInfoWithEmail} from "@mirohq/websdk-types/stable/api/board";
 import {SubscriptionExpandedPlan} from "../app/api/subscriptions/route";
-import {FetchError} from "./fetch-error";
 import axios from "axios";
 
 export const SubscriptionsList = () => {
@@ -38,7 +37,10 @@ export const SubscriptionsList = () => {
   }
   if (error) {
     return (
-      <FetchError error={error} />
+      <div className='p-4 rounded-md bg-red-50 border border-red-200'>
+        <div className='text-red-700 font-medium mb-1'>Error</div>
+        <div className='text-red-600 text-sm'>{error}</div>
+      </div>
     )
   }
   return (

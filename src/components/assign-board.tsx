@@ -53,7 +53,6 @@ export const AssignBoard = (
       setIsUpdatingUser(false)
       setRefetch(true)
     } catch (e) {
-      console.error(e)
       setIsUpdatingUser(false)
     }
   }
@@ -75,7 +74,6 @@ export const AssignBoard = (
       setIsUpdatingUser(false)
       setRefetch(true)
     } catch (e) {
-      console.error(e)
       setIsUpdatingUser(false)
     }
   }

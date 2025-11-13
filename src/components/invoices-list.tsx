@@ -1,7 +1,6 @@
 'use client'
 import {useEffect, useState} from "react";
 import {PaginatedSubscriptionInvoice} from "@salable/node-sdk/dist/src/types";
-import {FetchError} from "./fetch-error";
 import {format} from "date-fns";
 import Link from "next/link";
 import axios from "axios";
@@ -31,7 +30,12 @@ export const InvoicesList = ({uuid}: {uuid: string}) => {
     fetchData()
   }, []);
   if (loading) return <Loading />
-  if (error) return <FetchError error={error} />
+  if (error) return (
+    <div className='p-4 rounded-md bg-red-50 border border-red-200'>
+      <div className='text-red-700 font-medium mb-1'>Error</div>
+      <div className='text-red-600 text-sm'>{error}</div>
+    </div>
+  )
   return (
     <div>
       {invoices ? (

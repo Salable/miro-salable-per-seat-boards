@@ -68,7 +68,29 @@ export const POST = withAuth(async (state: State, request: NextRequest) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: "Failed to create checkout link" }), {
+    let errorMessage = "Failed to create checkout link";
+    
+    if (e && typeof e === 'object' && 'data' in e) {
+      const errorData = (e as { data?: unknown }).data;
+      if (errorData && typeof errorData === 'object' && 'error' in errorData && typeof errorData.error === 'string') {
+        errorMessage = errorData.error;
+      }
+    }
+    
+    if (errorMessage === "Failed to create checkout link" && e instanceof Error && e.message) {
+      try {
+        const parsed = JSON.parse(e.message);
+        if (parsed?.data?.error && typeof parsed.data.error === 'string') {
+          errorMessage = parsed.data.error;
+        } else {
+          errorMessage = e.message;
+        }
+      } catch {
+        errorMessage = e.message;
+      }
+    }
+    
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });

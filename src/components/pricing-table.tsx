@@ -6,7 +6,6 @@ import React, {useEffect, useState} from "react";
 import {PlanButton} from "./plan-button";
 import {salableBasicPlanUuid, salableProPlanUuid} from "../app/constants";
 import {EntitlementCheck} from "@salable/node-sdk/dist/src/types";
-import {FetchError} from "./fetch-error";
 import Link from "next/link";
 import axios from "axios";
 
@@ -28,12 +27,15 @@ export const PricingTable = () => {
         setLoading(false)
       } catch (e) {
         setLoading(false)
-        setError('Failed to fetch data')
+        if (axios.isAxiosError(e) && e.response?.data?.error) {
+          setError(e.response.data.error);
+        } else {
+          setError('Failed to fetch pricing data. Please try again.');
+        }
       }
     }
     fetchData()
   }, []);
-  if (error) return <FetchError error={error} />
   if (loading) return <Loading />
   return (
     <div>
@@ -87,6 +89,11 @@ export const PricingTable = () => {
         </div>
 
       </div>
+      {error && (
+        <div className='mt-6 p-3 rounded-md bg-red-50 border border-red-200'>
+          <div className='text-red-700 text-sm'>{error}</div>
+        </div>
+      )}
     </div>
   )
 }
