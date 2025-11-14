@@ -59,7 +59,7 @@ export const PricingTable = () => {
             <span className='text-xs font-light'>(per month)</span>
           </div>
           <BasicPlanPricingTableButton
-            isSubscribed={!!check?.features.find((f) => f.feature === 'basic_board')}
+            isSubscribed={!!check?.features.find((f) => f.feature === 'basic')}
             hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
         </div>
@@ -83,7 +83,7 @@ export const PricingTable = () => {
             <span className='text-xs font-light'>(per month)</span>
           </div>
           <ProPlanPricingTableButton
-            isSubscribed={!!check?.features.find((f) => f.feature === 'pro_board')}
+            isSubscribed={!!check?.features.find((f) => f.feature === 'pro')}
             hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
         </div>
@@ -91,7 +91,7 @@ export const PricingTable = () => {
       </div>
       {error && (
         <div className='mt-6 p-3 rounded-md bg-red-50 border border-red-200'>
-          <div className='text-red-700 text-sm'>{error}</div>
+          <div className='text-red-700 text-sm'>{error}</div>                                                                                                                               
         </div>
       )}
     </div>
@@ -102,11 +102,12 @@ export const PricingTable = () => {
 const BasicPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscribed: boolean; hasSubscriptions: boolean}) => {
   if (isSubscribed) {
     return (
-      <div
-        className='border-2 border-blue-700 p-4 rounded-md leading-none font-light transition flex items-center justify-center w-full bg-white text-blue-700 text-sm'
+      <Link
+        href={'/dashboard/subscriptions'}
+        className='border-2 border-blue-700 p-4 rounded-md leading-none font-light transition flex items-center justify-center w-full bg-white text-blue-700 text-sm hover:bg-blue-50 cursor-pointer'
       >
-        Subscribed
-      </div>
+        Manage boards
+      </Link>
     )
   }
   if (hasSubscriptions) {
@@ -125,11 +126,12 @@ const BasicPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscr
 const ProPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscribed: boolean; hasSubscriptions: boolean}) => {
   if (isSubscribed) {
     return (
-      <div
-        className='p-4 rounded-md leading-none font-light text-sm transition flex items-center justify-center w-full bg-white text-blue-700 border-2 border-solid border-blue-700'
+      <Link
+        href={'/dashboard/subscriptions'}
+        className='p-4 rounded-md leading-none font-light text-sm transition flex items-center justify-center w-full bg-white text-blue-700 border-2 border-solid border-blue-700 hover:bg-blue-50 cursor-pointer'
       >
-        Subscribed
-      </div>
+        Manage boards
+      </Link>
     )
   }
   if (hasSubscriptions) {

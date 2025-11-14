@@ -34,9 +34,8 @@ export const POST = withAuth(async (_state: State, request: NextRequest, context
     const difference = seatCount - currentSeatCount;
 
     if (difference === 0) {
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(null, {
         status: 200,
-        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -49,9 +48,8 @@ export const POST = withAuth(async (_state: State, request: NextRequest, context
 
     await salable.subscriptions.updateSeatCount(uuid, options);
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(null, {
       status: 200,
-      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     let errorMessage = "Failed to update seat count";

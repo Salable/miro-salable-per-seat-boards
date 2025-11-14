@@ -26,9 +26,8 @@ export const CancelPlanButton = ({
       await new Promise<void>(async (resolve) => {
         while (true) {
           try {
-            const board = await miro.board.getInfo();
             const subscriptionResponse = await axios.get(
-              `/api/subscriptions/${subscriptionUuid}?boardId=${board.id}`,
+              `/api/subscriptions/${subscriptionUuid}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             if (subscriptionResponse.data?.status === 'CANCELED') {

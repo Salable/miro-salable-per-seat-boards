@@ -14,14 +14,8 @@ import {salableBasicPlanUuid, salableProPlanUuid} from "../app/constants";
 import useSWR from "swr";
 
 export const SubscriptionView = ({uuid}: {uuid: string}) => {
-  const [boardId, setBoardId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    miro.board.getInfo().then(board => setBoardId(board.id));
-  }, []);
-
   const { data: subscription, isLoading, error, mutate } = useSWR<SubscriptionExpandedPlanCurrency>(
-    boardId ? `/api/subscriptions/${uuid}?boardId=${boardId}` : null
+    `/api/subscriptions/${uuid}`
   );
 
   const [fetchSeats, setFetchSeats] = useState<boolean>(true)

@@ -21,7 +21,6 @@ export const ChangePlanButton = ({
   const handleClick = async () => {
     setIsChangingSubscription(true);
     try {
-      const board = await miro.board.getInfo();
       const token = await miro.board.getIdToken();
       await axios.post(
         `/api/subscriptions/${subscriptionUuid}/change-plan`,
@@ -33,7 +32,7 @@ export const ChangePlanButton = ({
         while (true) {
           try {
             const subscriptionResponse = await axios.get(
-              `/api/subscriptions/${subscriptionUuid}?boardId=${board.id}`,
+              `/api/subscriptions/${subscriptionUuid}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
             if (subscriptionResponse.data?.planUuid === planUuid) {

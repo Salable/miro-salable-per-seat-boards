@@ -34,14 +34,26 @@ export const UpdateSubscription = ({
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        await mutate();
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        setFetchSeats(true)
+
+        await new Promise<void>(async (resolve) => {
+          while (true) {
+            try {
+              const subscriptionResponse = await axios.get(
+                `/api/subscriptions/${subscription.uuid}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (subscriptionResponse.data?.quantity === updatedSeatCount) {
+                await mutate();
+                setFetchSeats(true);
+                resolve();
+                break;
+              }
+              await new Promise((r) => setTimeout(r, 500));
+            } catch (e) {
+              break;
+            }
+          }
+        });
       } catch (error) {
         setUpdatedSeatCount(seatCount);
         
