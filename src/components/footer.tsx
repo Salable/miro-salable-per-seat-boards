@@ -2,7 +2,6 @@
 import React from "react";
 
 export const Footer = () => {
-  // const authUrl = await getAuthUrl();
   return (
     <div className='flex justify-between items-center mt-auto p-6'>
       <div>

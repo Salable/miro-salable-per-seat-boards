@@ -5,35 +5,37 @@ import {Circle} from "./icons/circle";
 import React, {useEffect, useState} from "react";
 import {PlanButton} from "./plan-button";
 import {salableBasicPlanUuid, salableProPlanUuid} from "../app/constants";
-import {CheckLicensesCapabilitiesResponse} from "@salable/node-sdk/dist/src/types";
-import {licenseCheck} from "../actions/licenses/check";
-import {isBoardOwner} from "../actions/board";
-import {FetchError} from "./fetch-error";
+import {EntitlementCheck} from "@salable/node-sdk/dist/src/types";
 import Link from "next/link";
+import axios from "axios";
 
-export const PricingTable = ({userId}: {userId: string}) => {
-  const [check, setCheck] = useState<CheckLicensesCapabilitiesResponse | null>(null)
-  const [isOwner, setIsOwner] = useState<boolean>(false)
+export const PricingTable = () => {
+  const [check, setCheck] = useState<EntitlementCheck | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     async function fetchData() {
       try {
         const boardInfo = await miro.board.getInfo()
-        const isBoardOwnerData = await isBoardOwner(boardInfo.id)
-        if (isBoardOwnerData.error) setError(isBoardOwnerData.error)
-        if (isBoardOwnerData.data !== null) setIsOwner(isBoardOwnerData.data)
-        const data = await licenseCheck([userId, boardInfo.id])
-        if (data.data) setCheck(data.data)
+        const token = await miro.board.getIdToken();
+        
+        const entitlementsResponse = await axios.get(
+          `/api/entitlements/check?granteeIds=${encodeURIComponent(boardInfo.id)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (entitlementsResponse.data) setCheck(entitlementsResponse.data)
         setLoading(false)
       } catch (e) {
         setLoading(false)
-        console.log(e)
+        if (axios.isAxiosError(e) && e.response?.data?.error) {
+          setError(e.response.data.error);
+        } else {
+          setError('Failed to fetch pricing data. Please try again.');
+        }
       }
     }
     fetchData()
   }, []);
-  if (error) return <FetchError error={error} />
   if (loading) return <Loading />
   return (
     <div>
@@ -57,8 +59,8 @@ export const PricingTable = ({userId}: {userId: string}) => {
             <span className='text-xs font-light'>(per month)</span>
           </div>
           <BasicPlanPricingTableButton
-            isSubscribed={!!check?.capabilities.find((c) => c.capability === 'basic_board')}
-            hasSubscriptions={!!(check?.capabilities && check?.capabilities?.length > 0)}
+            isSubscribed={!!check?.features.find((f) => f.feature === 'basic')}
+            hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
         </div>
 
@@ -81,13 +83,17 @@ export const PricingTable = ({userId}: {userId: string}) => {
             <span className='text-xs font-light'>(per month)</span>
           </div>
           <ProPlanPricingTableButton
-            isBoardOwner={isOwner}
-            isSubscribed={!!check?.capabilities.find((c) => c.capability === 'pro_board')}
-            hasSubscriptions={!!(check?.capabilities && check?.capabilities?.length > 0)}
+            isSubscribed={!!check?.features.find((f) => f.feature === 'pro')}
+            hasSubscriptions={!!(check?.features && check?.features?.length > 0)}
           />
         </div>
 
       </div>
+      {error && (
+        <div className='mt-6 p-3 rounded-md bg-red-50 border border-red-200'>
+          <div className='text-red-700 text-sm'>{error}</div>                                                                                                                               
+        </div>
+      )}
     </div>
   )
 }
@@ -96,11 +102,12 @@ export const PricingTable = ({userId}: {userId: string}) => {
 const BasicPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscribed: boolean; hasSubscriptions: boolean}) => {
   if (isSubscribed) {
     return (
-      <div
-        className='border-2 border-blue-700 p-4 rounded-md leading-none font-light transition flex items-center justify-center w-full bg-white text-blue-700 text-sm'
+      <Link
+        href={'/dashboard/subscriptions'}
+        className='border-2 border-blue-700 p-4 rounded-md leading-none font-light transition flex items-center justify-center w-full bg-white text-blue-700 text-sm hover:bg-blue-50 cursor-pointer'
       >
-        Subscribed
-      </div>
+        Manage boards
+      </Link>
     )
   }
   if (hasSubscriptions) {
@@ -116,23 +123,15 @@ const BasicPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscr
   return <PlanButton planUuid={salableBasicPlanUuid} />
 }
 
-const ProPlanPricingTableButton = ({isBoardOwner, isSubscribed, hasSubscriptions}: {isBoardOwner: boolean; isSubscribed: boolean; hasSubscriptions: boolean}) => {
-  if (!isBoardOwner) {
-    return (
-      <div
-        className='p-4 rounded-md leading-none font-light text-sm transition flex items-center justify-center w-full bg-white text-blue-700 border-2 border-solid border-blue-700'
-      >
-        Contact board owner
-      </div>
-    )
-  }
+const ProPlanPricingTableButton = ({isSubscribed, hasSubscriptions}: {isSubscribed: boolean; hasSubscriptions: boolean}) => {
   if (isSubscribed) {
     return (
-      <div
-        className='p-4 rounded-md leading-none font-light text-sm transition flex items-center justify-center w-full bg-white text-blue-700 border-2 border-solid border-blue-700'
+      <Link
+        href={'/dashboard/subscriptions'}
+        className='p-4 rounded-md leading-none font-light text-sm transition flex items-center justify-center w-full bg-white text-blue-700 border-2 border-solid border-blue-700 hover:bg-blue-50 cursor-pointer'
       >
-        Subscribed
-      </div>
+        Manage boards
+      </Link>
     )
   }
   if (hasSubscriptions) {

@@ -1,17 +1,59 @@
 'use client'
 import React, {useState} from "react";
-import {changeSubscription} from "../actions/subscriptions";
 import LoadingSpinner from "./loading-spinner";
+import axios from "axios";
+import { KeyedMutator } from "swr";
+import { SubscriptionExpandedPlanCurrency } from "../app/api/subscriptions/[uuid]/route";
 
-export const ChangePlanButton = ({subscriptionUuid, planUuid, planName}: {subscriptionUuid: string; planUuid: string, planName: string}) => {
+export const ChangePlanButton = ({
+  subscriptionUuid,
+  planUuid,
+  planName,
+  mutate,
+}: {
+  subscriptionUuid: string;
+  planUuid: string;
+  planName: string;
+  mutate: KeyedMutator<SubscriptionExpandedPlanCurrency>;
+}) => {
   const [isChangingSubscription, setIsChangingSubscription] = useState(false);
 
-  const handleClick  = async () => {
-    setIsChangingSubscription(true)
-    const board = await miro.board.getInfo()
-    const change = await changeSubscription(subscriptionUuid, planUuid, board.id)
-    if (change?.error) console.error(change?.error)
-    setIsChangingSubscription(false)
+  const handleClick = async () => {
+    setIsChangingSubscription(true);
+    try {
+      const token = await miro.board.getIdToken();
+      await axios.post(
+        `/api/subscriptions/${subscriptionUuid}/change-plan`,
+        { planUuid },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await new Promise<void>(async (resolve) => {
+        while (true) {
+          try {
+            const subscriptionResponse = await axios.get(
+              `/api/subscriptions/${subscriptionUuid}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (subscriptionResponse.data?.planUuid === planUuid) {
+              await mutate();
+              resolve();
+              break;
+            }
+            await new Promise((r) => setTimeout(r, 500));
+          } catch (e) {
+            break;
+          }
+        }
+      });
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.data?.error) {
+      } else {
+        console.error(e);
+      }
+    } finally {
+      setIsChangingSubscription(false);
+    }
   }
 
   return (

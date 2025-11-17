@@ -2,8 +2,8 @@
 import Link from "next/link";
 import React, {useEffect, useState} from "react";
 import {UserInfoWithEmail} from "@mirohq/websdk-types/stable/api/board";
-import {getAllSubscriptions, SubscriptionExpandedPlan} from "../actions/subscriptions";
-import {FetchError} from "./fetch-error";
+import {SubscriptionExpandedPlan} from "../app/api/subscriptions/route";
+import axios from "axios";
 
 export const SubscriptionsList = () => {
   const [loading, setLoading] = useState(true)
@@ -14,14 +14,18 @@ export const SubscriptionsList = () => {
     async function fetchData() {
       try {
         const userData = await miro.board.getUserInfo() as UserInfoWithEmail
-        const subscriptionData = await getAllSubscriptions(userData.email)
-        if (subscriptionData.data?.data) setSubscriptions(subscriptionData.data.data)
-        if (subscriptionData.error) setError(subscriptionData.error)
+        const token = await miro.board.getIdToken();
+        
+        const subscriptionResponse = await axios.get(
+          `/api/subscriptions?email=${userData.email}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (subscriptionResponse.data?.data) setSubscriptions(subscriptionResponse.data.data)
+        if (subscriptionResponse.data?.error) setError(subscriptionResponse.data.error)
         setLoading(false)
       } catch (e) {
         setLoading(false)
         setError('Failed to fetch subscriptions')
-        console.log(e)
       }
     }
     fetchData()
@@ -33,7 +37,10 @@ export const SubscriptionsList = () => {
   }
   if (error) {
     return (
-      <FetchError error={error} />
+      <div className='p-4 rounded-md bg-red-50 border border-red-200'>
+        <div className='text-red-700 font-medium mb-1'>Error</div>
+        <div className='text-red-600 text-sm'>{error}</div>
+      </div>
     )
   }
   return (

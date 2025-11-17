@@ -4,11 +4,10 @@ import {State} from '@mirohq/miro-api/dist/storage';
 
 const tokensCookie = 'MIRO_SALABLE_TOKEN_USAGE';
 
-export default function initMiroApi() {
+export default function initMiroApi(redirectUrl?: string) {
   const cookieInstance = cookies();
 
   const getCookieValue = (key: string = tokensCookie) => {
-    // Load state (tokens) from a cookie if it's set
     try {
       return JSON.parse(cookieInstance.get(key)?.value!) as State;
     } catch (err) {
@@ -16,7 +15,6 @@ export default function initMiroApi() {
     }
   };
 
-  // setup a Miro instance that loads tokens from cookies
   return {
     miro: new Miro({
       storage: {
@@ -32,6 +30,7 @@ export default function initMiroApi() {
           });
         },
       },
+      ...(redirectUrl && { redirectUrl }),
     }),
     // User id might be undefined if the user is not logged in yet, we will know it after the redirect happened
     userId: getCookieValue()?.userId || '',

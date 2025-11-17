@@ -1,26 +1,27 @@
 'use server'
 import React from 'react';
-import initMiroApi from '../utils/init-miro-api';
 import '../assets/style.css';
-import {LoginButton} from "../components/login-button";
-import Link from "next/link";
 import {Shapes} from "../components/shapes";
+import {LoginButton} from "../components/login-button";
+import initMiroApi from "../utils/init-miro-api";
+import Link from "next/link";
 
 const getAuthUrl = async () => {
   const {miro, userId} = initMiroApi();
-  // redirect to auth url if user has not authorized the app
+
   if (!userId || !(await miro.isAuthorized(userId))) {
     return miro.getAuthUrl();
   }
+
   return null
 };
 
 export default async function Page({searchParams}: {
   searchParams: Promise<Record<string, string>>
 }) {
-  const {userId} = initMiroApi();
   const params = await searchParams
   const authUrl = await getAuthUrl();
+
   if (authUrl) {
     return (
       <div className='p-6 pt-0'>
@@ -31,6 +32,7 @@ export default async function Page({searchParams}: {
       </div>
     )
   }
+
   if (params.auth === 'redirect') {
     return (
       <div className='p-6 pt-0'>
@@ -39,9 +41,10 @@ export default async function Page({searchParams}: {
       </div>
     )
   }
+
   return (
     <div className='p-6 pt-0'>
-      <Shapes userId={userId} />
+      <Shapes />
     </div>
   )
 }
