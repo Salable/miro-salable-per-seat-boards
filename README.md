@@ -17,21 +17,19 @@ This Miro app demonstrates using [per-seat](https://www.salable.app/features/per
 
 1. Go to the `Plans` tab on the sidebar and select `Create Plan`
 2. Set the plan name as `Basic` and optionally provide a description.
-3. Press `Continue` to configure `License Type` information.
-4. For the type of plan select `Standard`.
-5. Select `Month` for subscription cycle.
-6. Select `Per seat` license type.
-7. Select `Paid` to make it a paid plan.
-8. Currencies will then appear, input `1` as the per-seat cost of the plan’s subscription, this will be billed to a customer every month based on how many seats they have.
-9. Continue to `Assign values`.
-10. This section is for assigning feature values that can be used on pricing tables. This is not required to get set up.
-11. Click `Continue` to `Features`.
-12. Create the boolean features called `rectangle` and `triangle`. These will be used to lock features behind the entitlement check in the demo app.
-13. Create Plan.
-14. Repeat the above steps for a `Pro` plan but with the changes in the next steps.
-15. Set the per-seat cost as `2` plan which will bill the customer £2 per board they have access to.
-16. Select both existing features `triangle` and `rectangle`.
-17. Create a new boolean feature called circle. Set it to true on the Pro plan and false on the Basic plan.
+3. Select `Per seat` for pricing model..
+4. Select `Month` for subscription cycle.
+5. Select `Paid` to make it a paid plan.
+6. Currencies will then appear, input `1` as the per-seat cost of the plan’s subscription, this will be billed to a customer every month based on how many seats they have.
+7. Click `Next` to proceed to Features.
+8. This section is for creating features and assigning values to plans.
+9. Click `Create Feature`.
+10. Create the boolean features called `rectangle` and `triangle`. These will be used to lock features behind the entitlement check in the demo app.
+11. Create Plan.
+12. Repeat the above steps for a `Pro` plan but with the changes in the next steps.
+13. Set the per-seat cost as `2` plan which will bill the customer £2 per board they have access to.
+14. Select both existing features `triangle` and `rectangle`.
+15. Create a new boolean feature called circle. Set it to true on the Pro plan and false on the Basic plan.
 
 
 ### Update Environment Variables
